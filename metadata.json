@@ -1,0 +1,5 @@
+{
+  "name": "Panel de Administrador del Restaurante",
+  "description": "Un panel de administración para que los dueños de restaurantes puedan gestionar fácilmente su menú diario. Permite agregar, editar y eliminar productos en categorías como Desayuno, Comida, Bebidas y Especialidades para cada día de la semana.",
+  "requestFramePermissions": []
+}
