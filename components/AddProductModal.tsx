@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import type { Product, Day } from '../types';
 import { Category } from '../types';
@@ -140,13 +139,13 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
               <label className="block text-sm font-medium text-slate-700">Imagen</label>
               <div className="mt-1 flex items-center space-x-4">
                 {imagePreview && <img src={imagePreview} alt="Vista previa" className="w-24 h-24 rounded-md object-cover" />}
-                <input type="file" accept="image/*" onChange={handleImageChange} ref={fileInputRef} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-violet-50 file:text-brand-primary hover:file:bg-violet-100"/>
+                <input type="file" accept="image/*" onChange={handleImageChange} ref={fileInputRef} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-brand-primary hover:file:bg-pink-100"/>
               </div>
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>
           <div className="mt-6 flex justify-end space-x-3">
-            <Button type="button" variant="secondary" onClick={() => { onClose(); resetForm(); }} className="bg-violet-100 text-violet-800 hover:bg-violet-200" disabled={isSaving}>
+            <Button type="button" variant="secondary" onClick={() => { onClose(); resetForm(); }} className="bg-pink-100 text-pink-800 hover:bg-pink-200" disabled={isSaving}>
               Cancelar
             </Button>
             <Button type="submit" variant="primary" isLoading={isSaving}>

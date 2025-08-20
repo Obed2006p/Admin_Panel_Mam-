@@ -1,15 +1,16 @@
 
 import React from 'react';
-import type { Product } from '../types';
+import type { Product, SelectedView } from '../types';
 import { Category } from '../types';
 import { ProductCard } from './ProductCard';
 import { PlusIcon } from './icons/PlusIcon';
 import { Button } from './Button';
+import { WeekendView } from './WeekendView';
 
 interface MenuBoardProps {
   products: Product[];
   isLoading: boolean;
-  selectedDay: string;
+  selectedDay: SelectedView;
   onAddProduct: () => void;
   onEditProduct: (product: Product) => void;
   onDeleteProduct: (productId: string) => void;
@@ -25,6 +26,14 @@ export const MenuBoard: React.FC<MenuBoardProps> = ({
   onEditProduct,
   onDeleteProduct,
 }) => {
+  if (selectedDay === 'Fin de Semana') {
+    return (
+      <main className="flex-1 p-8 overflow-y-auto flex items-center justify-center">
+        <WeekendView />
+      </main>
+    );
+  }
+
   const groupedProducts = products.reduce((acc, product) => {
     const key = product.category;
     if (!acc[key]) {

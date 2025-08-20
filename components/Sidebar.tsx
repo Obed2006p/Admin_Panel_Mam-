@@ -1,20 +1,20 @@
-
 import React from 'react';
-import type { Day } from '../types';
+import type { Day, SelectedView } from '../types';
 import { DAYS_OF_WEEK } from '../constants';
-import { ClockIcon } from './icons/ClockIcon';
+import { LogoutIcon } from './icons/LogoutIcon';
 
 interface SidebarProps {
-  selectedDay: Day | 'Especialidad';
-  onSelectDay: (day: Day | 'Especialidad') => void;
+  selectedDay: SelectedView;
+  onSelectDay: (day: SelectedView) => void;
+  onLogout: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ selectedDay, onSelectDay }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ selectedDay, onSelectDay, onLogout }) => {
   const baseClasses = 'w-full text-left px-4 py-3 rounded-md text-lg font-medium transition-colors duration-200 flex items-center space-x-3';
   const activeClasses = 'bg-brand-primary text-white shadow-lg';
-  const inactiveClasses = 'text-slate-200 hover:bg-violet-800 hover:text-white';
+  const inactiveClasses = 'text-slate-200 hover:bg-pink-800 hover:text-white';
 
-  const menuItems: (Day | 'Especialidad')[] = [...DAYS_OF_WEEK, 'Especialidad'];
+  const menuItems: SelectedView[] = [...DAYS_OF_WEEK, 'Especialidad', 'Fin de Semana'];
 
   return (
     <aside className="bg-brand-dark text-white w-64 p-4 space-y-2 flex flex-col">
@@ -36,18 +36,15 @@ export const Sidebar: React.FC<SidebarProps> = ({ selectedDay, onSelectDay }) =>
         </ul>
       </nav>
       
-      {/* Horario de servicio */}
-      <div className="pt-4 mt-4 border-t border-violet-700 text-center text-slate-300">
-          <div className="flex items-center justify-center gap-2 font-semibold">
-              <ClockIcon className="w-5 h-5"/>
-              <span>Horario</span>
-          </div>
-          <p className="text-sm mt-1">Lunes a Viernes</p>
-          <p className="text-sm">7:00 am - 3:00 pm</p>
-      </div>
-
-       <div className="text-center p-2 text-xs text-slate-400 mt-2">
-        <p>Hecho con ❤️ para mamá</p>
+       {/* Logout Button */}
+      <div className="pt-4 mt-auto border-t border-pink-700">
+        <button
+          onClick={onLogout}
+          className={`${baseClasses} ${inactiveClasses}`}
+        >
+          <LogoutIcon className="w-5 h-5" />
+          <span>Cerrar Sesión</span>
+        </button>
       </div>
     </aside>
   );

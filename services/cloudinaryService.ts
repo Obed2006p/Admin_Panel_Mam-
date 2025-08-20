@@ -1,4 +1,3 @@
-
 // --- INSTRUCCIONES DE CLOUDINARY ---
 // ¡Hola! Para subir imágenes de verdad, necesitas una cuenta de Cloudinary.
 
@@ -15,8 +14,9 @@ export const uploadImage = async (file: File): Promise<string> => {
   console.log('Subiendo imagen a Cloudinary:', file.name);
 
   /*
-  // --- Lógica MOCK (desactivada) ---
-  await new Promise(res => setTimeout(res, 1500));
+  // --- Lógica MOCK (DESACTIVADA) ---
+  // Simulamos una subida que tarda 1 segundo para dar feedback visual.
+  await new Promise(res => setTimeout(res, 1000));
   const randomId = Math.floor(Math.random() * 1000) + 1;
   const imageUrl = `https://picsum.photos/400/300?random=${randomId}`;
   console.log('Imagen de ejemplo generada:', imageUrl);
@@ -25,9 +25,9 @@ export const uploadImage = async (file: File): Promise<string> => {
   // ------------------------------------
 
 
-  // --- Lógica REAL con CLOUDINARY ---
-  const CLOUD_NAME = "dsmzpsool"; // <-- PON TU CLOUD NAME AQUÍ
-  const UPLOAD_PRESET = "Comida-Lore"; // <-- PON TU UPLOAD PRESET AQUÍ
+  // --- Lógica REAL con CLOUDINARY (ACTIVADA) ---
+  const CLOUD_NAME = "dsmzpsool"; // <-- ¡Listo! Cloud Name configurado.
+  const UPLOAD_PRESET = "Comida-Lore"; // <-- ¡Listo! Upload Preset configurado.
   
   const formData = new FormData();
   formData.append("file", file);
@@ -40,14 +40,16 @@ export const uploadImage = async (file: File): Promise<string> => {
     });
 
     if (!response.ok) {
-      throw new Error("Error al subir la imagen.");
+      const errorData = await response.json();
+      console.error("Error de Cloudinary al subir:", errorData);
+      throw new Error(`Error al subir la imagen: ${errorData.error.message}`);
     }
 
     const data = await response.json();
     console.log("Imagen subida con éxito:", data.secure_url);
     return data.secure_url; // Esta es la URL de tu imagen en Cloudinary
   } catch (error) {
-    console.error("Error en Cloudinary:", error);
+    console.error("Error en la función de subida a Cloudinary:", error);
     throw error;
   }
 };

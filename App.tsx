@@ -3,11 +3,12 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { Sidebar } from './components/Sidebar';
 import { MenuBoard } from './components/MenuBoard';
 import { AddProductModal } from './components/AddProductModal';
-import { getMenuForDay, addProduct, updateProduct, deleteProduct } from './services/firebaseService';
+import { getMenuForDay, addProduct, updateProduct, deleteProduct, auth, firebaseAuth } from './services/firebaseService';
 import { uploadImage } from './services/cloudinaryService';
-import { Day, type Product } from './types';
+import { Day, type Product, type SelectedView } from './types';
+import { Login } from './components/Login';
 
-const getInitialDay = (): Day | 'Especialidad' => {
+const getInitialDay = (): SelectedView => {
     const dayIndex = new Date().getDay(); // Domingo: 0, Lunes: 1, ..., Sábado: 6
     switch (dayIndex) {
       case 1: return Day.Lunes;
@@ -17,14 +18,15 @@ const getInitialDay = (): Day | 'Especialidad' => {
       case 5: return Day.Viernes;
       case 0: // Domingo
       case 6: // Sábado
+        return 'Fin de Semana';
       default:
-        return Day.Lunes; // Por defecto Lunes si es fin de semana
+        return Day.Lunes;
     }
 };
 
-
-function App() {
-  const [selectedDay, setSelectedDay] = useState<Day | 'Especialidad'>(getInitialDay());
+// The main application panel, shown after login
+const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
+  const [selectedDay, setSelectedDay] = useState<SelectedView>(getInitialDay());
   const [menuItems, setMenuItems] = useState<Product[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,17 +40,20 @@ function App() {
       setMenuItems(products);
     } catch (error) {
       console.error("Error al cargar el menú:", error);
-      // Aquí podrías mostrar una notificación de error al usuario
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   useEffect(() => {
-    fetchMenu(selectedDay);
+    if (selectedDay !== 'Fin de Semana') {
+      fetchMenu(selectedDay);
+    } else {
+        setMenuItems([]);
+    }
   }, [selectedDay, fetchMenu]);
 
-  const handleSelectDay = (day: Day | 'Especialidad') => {
+  const handleSelectDay = (day: SelectedView) => {
     setSelectedDay(day);
   };
 
@@ -63,12 +68,13 @@ function App() {
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (window.confirm("¿Estás segura de que quieres eliminar este producto?")) {
-      setIsLoading(true); // Muestra un feedback de carga general
+    if (window.confirm("¿Estás segura de que quieres eliminar este producto? Esta acción no se puede deshacer.")) {
+      setIsLoading(true);
       try {
         await deleteProduct(productId);
-        // La recarga se maneja con un nuevo fetch, no se necesita actualizar el estado localmente
-        await fetchMenu(selectedDay); 
+        if (selectedDay !== 'Fin de Semana') {
+          await fetchMenu(selectedDay);
+        }
       } catch (error) {
         console.error("Error al eliminar el producto:", error);
       } finally {
@@ -81,8 +87,6 @@ function App() {
     setIsSaving(true);
     try {
         let imageUrl = productToEdit?.imageUrl || '';
-
-        // Si hay un archivo de imagen nuevo, súbelo a Cloudinary
         if (imageFile) {
             imageUrl = await uploadImage(imageFile);
         }
@@ -90,20 +94,19 @@ function App() {
         const finalProductData = { ...productData, imageUrl };
 
         if (productToEdit) {
-            // Actualiza un producto existente en Firebase
             await updateProduct(productToEdit.id, finalProductData);
         } else {
-            // Agrega un producto nuevo a Firebase
             await addProduct(finalProductData);
         }
         
         setIsModalOpen(false);
         setProductToEdit(null);
-        await fetchMenu(selectedDay); // Vuelve a cargar el menú del día actual
+        if (selectedDay !== 'Fin de Semana') {
+          await fetchMenu(selectedDay);
+        }
 
     } catch (error) {
         console.error("Error al guardar el producto:", error);
-        // Aquí podrías mostrar un error en el modal
     } finally {
         setIsSaving(false);
     }
@@ -111,7 +114,7 @@ function App() {
 
   return (
     <div className="flex h-screen bg-brand-light font-sans">
-      <Sidebar selectedDay={selectedDay} onSelectDay={handleSelectDay} />
+      <Sidebar selectedDay={selectedDay} onSelectDay={handleSelectDay} onLogout={onLogout} />
       <MenuBoard
         selectedDay={selectedDay}
         products={menuItems}
@@ -120,16 +123,62 @@ function App() {
         onEditProduct={handleEditProductClick}
         onDeleteProduct={handleDeleteProduct}
       />
-      <AddProductModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        onSave={handleSaveProduct}
-        productToEdit={productToEdit}
-        selectedDay={selectedDay}
-        isSaving={isSaving}
-      />
+      { selectedDay !== 'Fin de Semana' && (
+         <AddProductModal
+            isOpen={isModalOpen}
+            onClose={() => setIsModalOpen(false)}
+            onSave={handleSaveProduct}
+            productToEdit={productToEdit}
+            selectedDay={selectedDay as Day | 'Especialidad'} // Cast because it cannot be 'Fin de Semana' here
+            isSaving={isSaving}
+          />
+        )
+      }
     </div>
   );
+};
+
+
+function App() {
+  const [user, setUser] = useState<any | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = firebaseAuth.onAuthStateChanged(auth, (currentUser) => {
+      setUser(currentUser);
+      setAuthLoading(false);
+    });
+
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
+  }, []);
+
+  const handleLogout = async () => {
+    try {
+      await firebaseAuth.signOut(auth);
+      // onAuthStateChanged will handle setting user to null
+    } catch (error) {
+      console.error("Error al cerrar sesión:", error);
+    }
+  };
+
+  if (authLoading) {
+    // Optional: Show a full-screen loader while checking auth status
+    return (
+        <div className="flex h-screen w-screen justify-center items-center bg-brand-light">
+            <svg className="animate-spin h-12 w-12 text-brand-primary" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+        </div>
+    );
+  }
+  
+  if (!user) {
+    return <Login />;
+  }
+
+  return <AdminPanel onLogout={handleLogout} />;
 }
 
 export default App;

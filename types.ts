@@ -14,6 +14,8 @@ export enum Day {
   Viernes = 'Viernes',
 }
 
+export type SelectedView = Day | 'Especialidad' | 'Fin de Semana';
+
 export interface Product {
   id: string;
   name: string;
