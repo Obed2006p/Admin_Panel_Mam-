@@ -156,7 +156,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         onLogout={onLogout}
         isOpen={isSidebarOpen}
       />
-      <div className="flex-1 flex flex-col min-h-0">
+      <div className="flex-1 flex flex-col h-full">
         <MenuBoard
           selectedDay={selectedDay}
           products={menuItems}
