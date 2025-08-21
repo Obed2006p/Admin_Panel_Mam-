@@ -3,6 +3,7 @@ import React from 'react';
 import type { Product } from '../types';
 import { PencilIcon } from './icons/PencilIcon';
 import { TrashIcon } from './icons/TrashIcon';
+import { PhotoIcon } from './icons/PhotoIcon';
 
 interface ProductCardProps {
   product: Product;
@@ -10,10 +11,32 @@ interface ProductCardProps {
   onDelete: (productId: string) => void;
 }
 
-export const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDelete }) => {
+const getOptimizedImageUrl = (url: string) => {
+  if (!url) return '';
+  if (url.includes('cloudinary.com')) {
+    // Inserta transformaciones de Cloudinary para optimizar la imagen
+    // w_400: ancho de 400px, q_auto: calidad automática, f_auto: formato automático (ej. WebP)
+    return url.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
+  }
+  return url;
+};
+
+
+export const ProductCard: React.FC<ProductCardProps> = React.memo(({ product, onEdit, onDelete }) => {
   return (
     <div className="bg-white rounded-lg shadow-lg overflow-hidden flex flex-col transform hover:scale-105 transition-transform duration-300">
-      <img src={product.imageUrl} alt={product.name} className="w-full h-48 object-cover" />
+      <div className="w-full h-48 bg-slate-100 flex items-center justify-center">
+        {product.imageUrl ? (
+            <img 
+                src={getOptimizedImageUrl(product.imageUrl)} 
+                alt={product.name} 
+                className="w-full h-full object-contain" 
+                loading="lazy" 
+            />
+        ) : (
+            <PhotoIcon className="h-16 w-16 text-slate-300" />
+        )}
+      </div>
       <div className="p-4 flex flex-col flex-grow">
         <div className="flex justify-between items-start">
             <h3 className="text-xl font-bold text-slate-800">{product.name}</h3>
@@ -39,4 +62,4 @@ export const ProductCard: React.FC<ProductCardProps> = ({ product, onEdit, onDel
       </div>
     </div>
   );
-};
+});

@@ -11,7 +11,7 @@ interface SidebarProps {
   isOpen: boolean;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ selectedDay, onSelectDay, onLogout, isOpen }) => {
+export const Sidebar: React.FC<SidebarProps> = React.memo(({ selectedDay, onSelectDay, onLogout, isOpen }) => {
   const baseClasses = 'w-full text-left px-4 py-3 rounded-md text-lg font-medium transition-colors duration-200 flex items-center space-x-3';
   const activeClasses = 'bg-brand-primary text-white shadow-lg';
   const inactiveClasses = 'text-slate-200 hover:bg-pink-800 hover:text-white';
@@ -57,4 +57,4 @@ export const Sidebar: React.FC<SidebarProps> = ({ selectedDay, onSelectDay, onLo
       </div>
     </aside>
   );
-};
+});

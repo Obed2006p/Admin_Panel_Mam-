@@ -37,10 +37,23 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const fetchMenu = useCallback(async (day: Day | 'Especialidad') => {
     setIsLoading(true);
     try {
-      const products = await getMenuForDay(day);
-      setMenuItems(products);
+      // Siempre obtenemos los productos del día seleccionado.
+      // Si es 'Lunes', trae los de Lunes. Si es 'Especialidad', trae las especialidades.
+      const dailyProducts = await getMenuForDay(day);
+
+      let specialtyProducts: Product[] = [];
+      // Si estamos viendo un día de la semana (y no la vista de 'Especialidad'),
+      // también traemos los productos marcados como 'Especialidad'.
+      if (Object.values(Day).includes(day as Day)) {
+        specialtyProducts = await getMenuForDay('Especialidad');
+      }
+
+      // Combinamos ambos listados para mostrar el menú del día + las especialidades.
+      setMenuItems([...dailyProducts, ...specialtyProducts]);
+      
     } catch (error) {
       console.error("Error al cargar el menú:", error);
+      setMenuItems([]); // Limpiar en caso de error para evitar mostrar datos incorrectos
     } finally {
       setIsLoading(false);
     }
@@ -54,24 +67,24 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
   }, [selectedDay, fetchMenu]);
 
-  const handleSelectDay = (day: SelectedView) => {
+  const handleSelectDay = useCallback((day: SelectedView) => {
     setSelectedDay(day);
     if (window.innerWidth < 768) { // md breakpoint
       setIsSidebarOpen(false); // Close sidebar on selection on mobile
     }
-  };
+  }, []);
 
-  const handleAddProductClick = () => {
+  const handleAddProductClick = useCallback(() => {
     setProductToEdit(null);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleEditProductClick = (product: Product) => {
+  const handleEditProductClick = useCallback((product: Product) => {
     setProductToEdit(product);
     setIsModalOpen(true);
-  };
+  }, []);
 
-  const handleDeleteProduct = async (productId: string) => {
+  const handleDeleteProduct = useCallback(async (productId: string) => {
     if (window.confirm("¿Estás segura de que quieres eliminar este producto? Esta acción no se puede deshacer.")) {
       setIsLoading(true);
       try {
@@ -85,9 +98,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         setIsLoading(false);
       }
     }
-  };
+  }, [selectedDay, fetchMenu]);
   
-  const handleSaveProduct = async (productData: Omit<Product, 'id' | 'imageUrl'> & {imageUrl: string}, imageFile: File | null, imageRemoved: boolean) => {
+  const handleSaveProduct = useCallback(async (productData: Omit<Product, 'id' | 'imageUrl'> & {imageUrl: string}, imageFile: File | null, imageRemoved: boolean) => {
     setIsSaving(true);
     try {
         let imageUrl = productToEdit?.imageUrl || '';
@@ -117,7 +130,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     } finally {
         setIsSaving(false);
     }
-  };
+  }, [productToEdit, selectedDay, fetchMenu]);
+
+  const handleToggleSidebar = useCallback(() => {
+    setIsSidebarOpen(true);
+  }, []);
+
+  const handleCloseSidebar = useCallback(() => {
+    setIsSidebarOpen(false);
+  }, []);
 
   return (
     <div className="relative h-screen md:flex bg-brand-light font-sans overflow-hidden">
@@ -125,7 +146,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
       {isSidebarOpen && (
         <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
-          onClick={() => setIsSidebarOpen(false)}
+          onClick={handleCloseSidebar}
           aria-hidden="true"
         />
       )}
@@ -135,7 +156,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
         onLogout={onLogout}
         isOpen={isSidebarOpen}
       />
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-h-0">
         <MenuBoard
           selectedDay={selectedDay}
           products={menuItems}
@@ -143,7 +164,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
           onAddProduct={handleAddProductClick}
           onEditProduct={handleEditProductClick}
           onDeleteProduct={handleDeleteProduct}
-          onToggleSidebar={() => setIsSidebarOpen(true)}
+          onToggleSidebar={handleToggleSidebar}
         />
       </div>
       { selectedDay !== 'Fin de Semana' && (

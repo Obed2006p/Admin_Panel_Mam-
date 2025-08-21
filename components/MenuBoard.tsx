@@ -20,7 +20,7 @@ interface MenuBoardProps {
 
 const categoryOrder: Category[] = [Category.Desayuno, Category.Comida, Category.Bebidas, Category.Especialidad];
 
-export const MenuBoard: React.FC<MenuBoardProps> = ({
+export const MenuBoard: React.FC<MenuBoardProps> = React.memo(({
   products,
   isLoading,
   selectedDay,
@@ -119,4 +119,4 @@ export const MenuBoard: React.FC<MenuBoardProps> = ({
       {renderContent()}
     </main>
   );
-};
+});
