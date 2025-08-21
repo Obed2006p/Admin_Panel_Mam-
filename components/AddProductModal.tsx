@@ -3,12 +3,12 @@ import type { Product, Day } from '../types';
 import { Category } from '../types';
 import { CATEGORIES } from '../constants';
 import { Button } from './Button';
-import { uploadImage } from '../services/cloudinaryService';
+import { TrashIcon } from './icons/TrashIcon';
 
 interface AddProductModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (productData: Omit<Product, 'id'>, imageFile: File | null) => void;
+  onSave: (productData: Omit<Product, 'id'>, imageFile: File | null, imageRemoved: boolean) => void;
   productToEdit: Product | null;
   selectedDay: Day | 'Especialidad';
   isSaving: boolean;
@@ -28,6 +28,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
   const [category, setCategory] = useState<Category>(Category.Comida);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [imageWasRemoved, setImageWasRemoved] = useState(false);
   const [error, setError] = useState('');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -40,6 +41,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setPrice(productToEdit.price.toString());
       setImagePreview(productToEdit.imageUrl);
       setImageFile(null);
+      setImageWasRemoved(false);
     } else {
       resetForm();
     }
@@ -52,6 +54,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     setCategory(Category.Comida);
     setImageFile(null);
     setImagePreview(null);
+    setImageWasRemoved(false);
     setError('');
     if (fileInputRef.current) {
         fileInputRef.current.value = "";
@@ -62,11 +65,21 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
     const file = e.target.files?.[0];
     if (file) {
       setImageFile(file);
+      setImageWasRemoved(false);
       const reader = new FileReader();
       reader.onloadend = () => {
         setImagePreview(reader.result as string);
       };
       reader.readAsDataURL(file);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setImageFile(null);
+    setImagePreview(null);
+    setImageWasRemoved(true);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
     }
   };
 
@@ -80,10 +93,6 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
       setError('Por favor, ingresa un precio válido.');
       return;
     }
-    if (!productToEdit && !imageFile) {
-        setError('Debes seleccionar una imagen para el nuevo producto.');
-        return;
-    }
     setError('');
     
     const finalCategory = selectedDay === 'Especialidad' ? Category.Especialidad : category;
@@ -95,7 +104,7 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
         category: finalCategory,
         day: selectedDay,
         imageUrl: productToEdit?.imageUrl || ''
-    }, imageFile);
+    }, imageFile, imageWasRemoved);
   };
   
   if (!isOpen) return null;
@@ -138,9 +147,22 @@ export const AddProductModal: React.FC<AddProductModalProps> = ({
             <div>
               <label className="block text-sm font-medium text-slate-700">Imagen</label>
               <div className="mt-1 flex items-center space-x-4">
-                {imagePreview && <img src={imagePreview} alt="Vista previa" className="w-24 h-24 rounded-md object-cover" />}
+                {imagePreview && (
+                  <div className="relative">
+                    <img src={imagePreview} alt="Vista previa" className="w-24 h-24 rounded-md object-cover" />
+                    <button
+                      type="button"
+                      onClick={handleRemoveImage}
+                      className="absolute -top-2 -right-2 bg-red-600 text-white rounded-full p-1 shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                      aria-label="Eliminar imagen"
+                    >
+                      <TrashIcon className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
                 <input type="file" accept="image/*" onChange={handleImageChange} ref={fileInputRef} className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-pink-50 file:text-brand-primary hover:file:bg-pink-100"/>
               </div>
+              <p className="text-xs text-slate-500 mt-2">La imagen es opcional.</p>
             </div>
             {error && <p className="text-red-500 text-sm">{error}</p>}
           </div>

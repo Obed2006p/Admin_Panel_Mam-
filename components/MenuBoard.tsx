@@ -6,6 +6,7 @@ import { ProductCard } from './ProductCard';
 import { PlusIcon } from './icons/PlusIcon';
 import { Button } from './Button';
 import { WeekendView } from './WeekendView';
+import { MenuIcon } from './icons/MenuIcon';
 
 interface MenuBoardProps {
   products: Product[];
@@ -14,6 +15,7 @@ interface MenuBoardProps {
   onAddProduct: () => void;
   onEditProduct: (product: Product) => void;
   onDeleteProduct: (productId: string) => void;
+  onToggleSidebar: () => void;
 }
 
 const categoryOrder: Category[] = [Category.Desayuno, Category.Comida, Category.Bebidas, Category.Especialidad];
@@ -25,6 +27,7 @@ export const MenuBoard: React.FC<MenuBoardProps> = ({
   onAddProduct,
   onEditProduct,
   onDeleteProduct,
+  onToggleSidebar,
 }) => {
   if (selectedDay === 'Fin de Semana') {
     return (
@@ -93,14 +96,24 @@ export const MenuBoard: React.FC<MenuBoardProps> = ({
   };
   
   return (
-    <main className="flex-1 p-8 overflow-y-auto">
+    <main className="flex-1 p-4 sm:p-8 overflow-y-auto">
       <header className="flex justify-between items-center mb-8">
-        <h1 className="text-4xl font-extrabold text-slate-900 tracking-tight">
-          Menú de {selectedDay}
-        </h1>
+        <div className="flex items-center gap-4">
+           <button
+            onClick={onToggleSidebar}
+            className="md:hidden p-2 rounded-md text-slate-700 hover:bg-slate-200 focus:outline-none focus:ring-2 focus:ring-inset focus:ring-brand-primary"
+            aria-label="Abrir menú"
+          >
+            <MenuIcon className="w-6 h-6" />
+          </button>
+          <h1 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            Menú de {selectedDay}
+          </h1>
+        </div>
         <Button onClick={onAddProduct}>
           <PlusIcon className="w-5 h-5" />
-          Agregar Producto
+          <span className="hidden sm:inline">Agregar Producto</span>
+          <span className="sm:hidden">Agregar</span>
         </Button>
       </header>
       {renderContent()}

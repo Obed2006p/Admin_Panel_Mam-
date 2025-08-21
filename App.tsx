@@ -32,6 +32,7 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [productToEdit, setProductToEdit] = useState<Product | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   const fetchMenu = useCallback(async (day: Day | 'Especialidad') => {
     setIsLoading(true);
@@ -55,6 +56,9 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
 
   const handleSelectDay = (day: SelectedView) => {
     setSelectedDay(day);
+    if (window.innerWidth < 768) { // md breakpoint
+      setIsSidebarOpen(false); // Close sidebar on selection on mobile
+    }
   };
 
   const handleAddProductClick = () => {
@@ -83,12 +87,15 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
     }
   };
   
-  const handleSaveProduct = async (productData: Omit<Product, 'id' | 'imageUrl'> & {imageUrl: string}, imageFile: File | null) => {
+  const handleSaveProduct = async (productData: Omit<Product, 'id' | 'imageUrl'> & {imageUrl: string}, imageFile: File | null, imageRemoved: boolean) => {
     setIsSaving(true);
     try {
         let imageUrl = productToEdit?.imageUrl || '';
-        if (imageFile) {
-            imageUrl = await uploadImage(imageFile);
+        
+        if (imageRemoved) {
+            imageUrl = ''; // El usuario eliminó explícitamente la imagen
+        } else if (imageFile) {
+            imageUrl = await uploadImage(imageFile); // El usuario subió una nueva imagen
         }
         
         const finalProductData = { ...productData, imageUrl };
@@ -113,16 +120,32 @@ const AdminPanel = ({ onLogout }: { onLogout: () => void }) => {
   };
 
   return (
-    <div className="flex h-screen bg-brand-light font-sans">
-      <Sidebar selectedDay={selectedDay} onSelectDay={handleSelectDay} onLogout={onLogout} />
-      <MenuBoard
-        selectedDay={selectedDay}
-        products={menuItems}
-        isLoading={isLoading}
-        onAddProduct={handleAddProductClick}
-        onEditProduct={handleEditProductClick}
-        onDeleteProduct={handleDeleteProduct}
+    <div className="relative h-screen md:flex bg-brand-light font-sans overflow-hidden">
+      {/* Mobile overlay, shown when sidebar is open */}
+      {isSidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          onClick={() => setIsSidebarOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+      <Sidebar 
+        selectedDay={selectedDay} 
+        onSelectDay={handleSelectDay} 
+        onLogout={onLogout}
+        isOpen={isSidebarOpen}
       />
+      <div className="flex-1 flex flex-col min-w-0">
+        <MenuBoard
+          selectedDay={selectedDay}
+          products={menuItems}
+          isLoading={isLoading}
+          onAddProduct={handleAddProductClick}
+          onEditProduct={handleEditProductClick}
+          onDeleteProduct={handleDeleteProduct}
+          onToggleSidebar={() => setIsSidebarOpen(true)}
+        />
+      </div>
       { selectedDay !== 'Fin de Semana' && (
          <AddProductModal
             isOpen={isModalOpen}

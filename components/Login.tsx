@@ -39,10 +39,8 @@ export const Login: React.FC = () => {
       <div className="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
       <div className="relative w-full max-w-md bg-slate-900/80 rounded-2xl shadow-2xl p-8 border border-slate-700">
         <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-white tracking-tight">
-                Tu Logo Aquí
-            </h1>
-            <p className="text-brand-primary font-semibold mt-1">Panel de Administrador</p>
+            <img src="https://res.cloudinary.com/dsmzpsool/image/upload/v1755814950/Logo_mi_lore_dogazs.png" alt="Logo del Restaurante" className="mx-auto h-24 w-auto" />
+            <h2 className="text-2xl font-bold text-brand-secondary mt-4 tracking-wide [text-shadow:0_0_8px_#EC4899,0_0_12px_#EC4899]">Panel de Administrador</h2>
         </div>
         
         <form onSubmit={handleLogin} className="space-y-6">
